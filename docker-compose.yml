@@ -1,0 +1,48 @@
+services:
+  # MySQL контейнер
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - backend
+
+  # Go-приложение (Cron для загрузки данных)
+  goapp:
+    build: ./go-app
+    container_name: goapp
+    volumes:
+      - ./go-app:/app
+    networks:
+      - backend
+    depends_on:
+      - mysql
+
+  # PHP-приложение (API сервер)
+  phpapp:
+    build: ./php-app
+    container_name: phpapp
+    ports:
+      - "8080:80"
+    volumes:
+      - ./php-app:/var/www/html
+    networks:
+      - backend
+    depends_on:
+      - mysql
+
+# Настройка томов для MySQL
+volumes:
+  mysql_data:
+
+# Настройка сети для общения контейнеров
+networks:
+  backend:
